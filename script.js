@@ -11,14 +11,13 @@ async function initAuth() {
         cacheLocation: "localstorage",
     });
 
-    // Check if user is logged in
     const isAuthenticated = await auth0Client.isAuthenticated();
 
     if (isAuthenticated) {
         const user = await auth0Client.getUser();
         updateUI(user);
     } else {
-        resetUI();
+        updateUI(null);
     }
 }
 
@@ -47,25 +46,23 @@ document.getElementById("logout-btn").addEventListener("click", async () => {
 
 // Update UI After Login
 async function updateUI(user) {
-    document.querySelector(".auth-buttons").style.display = "none";
-    document.getElementById("user-info").classList.remove("hidden");
+    const authButtons = document.querySelector(".auth-buttons");
+    const userInfo = document.getElementById("user-info");
+    const greetingText = document.getElementById("greeting-text");
 
-    // Get User's IP and Time Zone, then set greeting
-    fetch("https://api.ipify.org?format=json")
-        .then((response) => response.json())
-        .then((data) => {
-            // Use the IP to get location and time zone
-            fetch(`https://ipgeolocation.io/timezone?apiKey=YOUR_API_KEY&ip=${data.ip}`)
-                .then((response) => response.json())
-                .then((locationData) => {
-                    const userTimeZone = locationData.timezone;
-                    const currentTime = new Date().toLocaleString("en-US", { timeZone: userTimeZone });
-                    const hour = new Date(currentTime).getHours();
+    if (user) {
+        authButtons.style.display = "none"; // Hide login/signup
+        userInfo.classList.remove("hidden"); // Show user info
 
-                    let greeting = hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
-                    document.getElementById("greeting-text").textContent = `${greeting}, ${user.name}`;
-                });
-        });
+        // Get Local Time for Greeting
+        const hour = new Date().getHours();
+        const greeting = hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
+        
+        greetingText.textContent = `${greeting}, ${user.name}`;
+    } else {
+        authButtons.style.display = "block"; // Show login/signup
+        userInfo.classList.add("hidden"); // Hide user info
+    }
 }
 
 // Reset UI After Logout
@@ -76,3 +73,4 @@ function resetUI() {
 
 // Start Authentication
 window.onload = initAuth;
+
